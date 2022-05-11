@@ -56,23 +56,19 @@ live_data = LiveData(firebase_app, FIREBASE_MESSAGE_PATH, TTL)
 message_cache = TTLCache(CACHE_SIZE, CACHE_TTL)
 
 def handle_message(sender, value=None, path=None):
-    logger.debug("handle_message called with value=%s path=%s")
+    logger.debug("handle_message called with value=%s path=%s", value, path)
+
+    if value in message_cache:
+        logger.debug("%s command received in last %s seconds. Ignoring.", value, CACHE_TTL)
+        return
 
     if value == 'on':
         logger.info("ON command received")
-        if value in message_cache:
-            logger.debug("ON command received in last %s seconds. Ignoring.", CACHE_TTL)
-            return
-
         send_on()
         message_cache[value] = 1
 
     elif value == 'off':
         logger.info("OFF command received")
-        if value in message_cache:
-            logger.debug("OFF command received in last %s seconds. Ignoring.", CACHE_TTL)
-            return
-
         send_off()
         message_cache[value] = 1
 
