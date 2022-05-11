@@ -1,3 +1,4 @@
+from cachetools import TTLCache
 from datetime import timedelta
 import logging
 import os
@@ -40,8 +41,8 @@ NAME = 'firebase'
 AUTH_DOMAIN = '{}.firebaseapp.com'.format(FIREBASE_APP_NAME)
 STORAGE_BUCKET = '{}.appspot.com'.format(FIREBASE_APP_NAME)
 TTL = timedelta(minutes=75)
-CACHE_SIZE = 20  # items
-CACHE_TTL = 30  # seconds
+CACHE_SIZE = 2  # items
+CACHE_TTL = 5  # seconds
 
 firebase_config = {
     'apiKey': FIREBASE_API_KEY,
@@ -52,16 +53,28 @@ firebase_config = {
 }
 firebase_app = pyrebase.initialize_app(firebase_config)
 live_data = LiveData(firebase_app, FIREBASE_MESSAGE_PATH, TTL)
-
+message_cache = TTLCache(CACHE_SIZE, CACHE_TTL)
 
 def handle_message(sender, value=None, path=None):
+    logger.debug("handle_message called with value=%s path=%s")
+
     if value == 'on':
         logger.info("ON command received")
+        if value in message_cache:
+            logger.debug("ON command received in last %s seconds. Ignoring.", CACHE_TTL)
+            return
+
         send_on()
+        message_cache[value] = 1
 
     elif value == 'off':
         logger.info("OFF command received")
+        if value in message_cache:
+            logger.debug("OFF command received in last %s seconds. Ignoring.", CACHE_TTL)
+            return
+
         send_off()
+        message_cache[value] = 1
 
     else:
         logger.error("Unknown value: %s", value)
