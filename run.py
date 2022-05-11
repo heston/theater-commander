@@ -57,11 +57,11 @@ live_data = LiveData(firebase_app, FIREBASE_MESSAGE_PATH, TTL)
 def handle_message(sender, value=None, path=None):
     if value == 'on':
         logger.info("ON command received")
-        write_fifo(1)
+        send_on()
 
     elif value == 'off':
         logger.info("OFF command received")
-        write_fifo(0)
+        send_off()
 
     else:
         logger.error("Unknown value: %s", value)
@@ -71,6 +71,14 @@ def handle_message(sender, value=None, path=None):
 
 
 live_data.signal('/').connect(handle_message)
+
+
+def send_on():
+    write_fifo('1')
+
+
+def send_off():
+    write_fifo('0')
 
 
 def write_fifo(value):
