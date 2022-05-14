@@ -1,4 +1,5 @@
 SHELL := /bin/bash
+mkfile_dir := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
 .PHONY: setup
 setup:
@@ -9,7 +10,7 @@ setup:
 
 .PHONY: install
 install:
-	sudo sed "s|{{DIR}}|$(dirname $(realpath theatercommander.service))|g" \
+	sudo sed "s|{{DIR}}|$(mkfile_dir)|g" \
 		theatercommander.service \
 		> /lib/systemd/system/theatercommander.service
 	sudo chmod 644 /lib/systemd/system/theatercommander.service
